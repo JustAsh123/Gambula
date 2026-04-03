@@ -9,7 +9,6 @@ const ReactionClickerGame = lazy(() => import('./ReactionClickerGame'));
 const SnakeGame = lazy(() => import('./SnakeGame'));
 const SpaceShooterGame = lazy(() => import('./SpaceShooterGame'));
 const TypingSpeedGame = lazy(() => import('./TypingSpeedGame'));
-const WhackMoleGame = lazy(() => import('./WhackMoleGame'));
 
 export const GAME_COMPONENTS = {
   snake: SnakeGame,
@@ -19,6 +18,5 @@ export const GAME_COMPONENTS = {
   'reaction-clicker': ReactionClickerGame,
   'endless-runner': EndlessRunnerGame,
   'memory-flip': MemoryFlipGame,
-  'whack-a-mole': WhackMoleGame,
   'typing-speed': TypingSpeedGame,
 };

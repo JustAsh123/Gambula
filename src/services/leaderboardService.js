@@ -49,11 +49,12 @@ export function validateScoreSubmission(gameId, score, session = {}) {
       break;
     }
     case 'space-shooter': {
-      const enemiesDestroyed = Number(session.enemiesDestroyed || 0);
-      const wavesCleared = Number(session.wavesCleared || 0);
-      const expectedScore = enemiesDestroyed * 25 + wavesCleared * 100;
+      const killScore = Number(session.killScore || 0);
+      const survivalScore = Number(session.survivalScore || 0);
+      const livesLost = Number(session.livesLost || 0);
+      const expectedScore = killScore + survivalScore;
 
-      if (expectedScore !== normalizedScore || enemiesDestroyed > durationMs / 120 + 10) {
+      if (expectedScore !== normalizedScore || livesLost > 3) {
         return invalid('Shooter run validation failed.');
       }
 
@@ -62,7 +63,8 @@ export function validateScoreSubmission(gameId, score, session = {}) {
     case 'brick-breaker': {
       const bricksBroken = Number(session.bricksBroken || 0);
       const levelsCleared = Number(session.levelsCleared || 0);
-      const expectedScore = bricksBroken * 100 + levelsCleared * 200;
+      const powerupsCollected = Number(session.powerupsCollected || 0);
+      const expectedScore = bricksBroken * 100 + levelsCleared * 250 + powerupsCollected * 50;
 
       if (expectedScore !== normalizedScore) {
         return invalid('Breaker score validation failed.');
@@ -71,16 +73,28 @@ export function validateScoreSubmission(gameId, score, session = {}) {
       break;
     }
     case 'reaction-clicker': {
-      const roundsCompleted = Number(session.roundsCompleted || 0);
+      const successfulReactions = Number(session.successfulReactions || 0);
+      const mistakesMade = Number(session.mistakesMade || 0);
+      const totalSpeedBonus = Number(session.totalSpeedBonus || 0);
+      const totalStreakBonus = Number(session.totalStreakBonus || 0);
+      const expectedScore = successfulReactions * 120 + totalSpeedBonus + totalStreakBonus;
 
-      if (roundsCompleted < 1 || normalizedScore > roundsCompleted * 240) {
+      if (
+        successfulReactions < 1 ||
+        mistakesMade > 3 ||
+        totalSpeedBonus < 0 ||
+        totalStreakBonus < 0 ||
+        expectedScore !== normalizedScore
+      ) {
         return invalid('Reaction run validation failed.');
       }
 
       break;
     }
     case 'endless-runner': {
-      if (normalizedScore > durationMs / 8 + 250) {
+      const distanceUnits = Number(session.distanceUnits || 0);
+
+      if (Math.abs(normalizedScore - distanceUnits) > 2) {
         return invalid('Runner distance validation failed.');
       }
 
@@ -96,19 +110,15 @@ export function validateScoreSubmission(gameId, score, session = {}) {
 
       break;
     }
-    case 'whack-a-mole': {
-      const hits = Number(session.hits || 0);
-
-      if (normalizedScore > hits * 35 + 100) {
-        return invalid('Whack score validation failed.');
-      }
-
-      break;
-    }
     case 'typing-speed': {
       const correctWords = Number(session.correctWords || 0);
+      const longestWordLength = Number(session.longestWordLength || 0);
+      const maxPossibleScore =
+        correctWords * 12 +
+        correctWords * longestWordLength * 4 +
+        (correctWords * (correctWords + 1) * 3) / 2;
 
-      if (normalizedScore > correctWords * 45 + 120) {
+      if (normalizedScore > maxPossibleScore) {
         return invalid('Typing score validation failed.');
       }
 

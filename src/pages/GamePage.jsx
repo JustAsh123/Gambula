@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import LeaderboardPanel from '../components/leaderboard/LeaderboardPanel';
 import Button from '../components/shared/Button';
-import Card from '../components/shared/Card';
 import GameCabinet from '../components/shared/GameCabinet';
 import GlassPanel from '../components/shared/GlassPanel';
 import ToastNotice from '../components/shared/ToastNotice';
@@ -268,153 +267,154 @@ export default function GamePage() {
       : submitState.error || submitState.message || 'This run is complete.'
     : '';
   const sessionLabel = lastResult ? 'Run complete' : isPaused ? 'Paused' : 'Live';
+  const statusToneClass = submitState.error
+    ? 'status-error'
+    : submitState.kind === 'success'
+      ? 'status-success'
+      : 'status-info';
+  const helperText = user
+    ? 'Scores save automatically when a run ends. No manual submit step needed.'
+    : 'Play instantly as a guest, then log in when you want scores saved.';
 
   if (!game || !GameComponent) {
     return <NotFoundPage />;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <ToastNotice notice={notice} />
 
-      <GlassPanel strong className="p-6 sm:p-8">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <Link
-              className="link-subtle"
-              to="/games"
-            >
-              Back To Games
-            </Link>
-            <h2 className="mt-3 text-4xl font-semibold text-white">{game.name}</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-gray-300">{game.description}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <span className="score-pill">{game.controls}</span>
-            <span className="score-pill">{game.scoring}</span>
-            <span className="score-pill">{autoSaveLabel}</span>
-          </div>
-        </div>
-      </GlassPanel>
-
-      <div className="grid gap-6 lg:grid-cols-[1.35fr,0.65fr]">
-        <GameCabinet
-          GameComponent={GameComponent}
-          controlsHint={game.controls}
-          gameId={game.id}
-          isPaused={isPaused}
-          lastResult={lastResult}
-          onGameOver={handleGameOver}
-          onPlayAgain={handlePlayAgain}
-          onScoreChange={handleScoreChange}
-          onTogglePause={handlePauseToggle}
-          pauseStateRef={pauseStateRef}
-          resetKey={resetKey}
-          statusLabel={cabinetStatusLabel}
-        />
-
-        <div className="space-y-6">
-          <GlassPanel className="p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="section-label">Run Stats</p>
-                <h3 className="mt-2 text-xl font-semibold text-white">Current session</h3>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(290px,0.72fr)] lg:items-start">
+        <div className="space-y-4">
+          <GlassPanel strong className="p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <Link
+                  className="link-subtle"
+                  to="/games"
+                >
+                  Back To Games
+                </Link>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <h2 className="text-2xl font-semibold text-white sm:text-3xl">{game.name}</h2>
+                  <span className="score-pill">{sessionLabel}</span>
+                </div>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">{game.description}</p>
               </div>
-              <span className="score-pill">{sessionLabel}</span>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              <Card className="p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-gray-500">Live score</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{formatScore(liveScore)}</p>
-              </Card>
-              <Card className="p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-gray-500">
-                  Best saved score
-                </p>
-                <p className="mt-3 text-3xl font-semibold text-white">{formatScore(displayBest)}</p>
-              </Card>
-            </div>
-
-            {lastResult ? (
-              <div className={`${submitState.kind === 'success' ? 'status-success' : 'status-info'} mt-4`}>
-                {submitState.loading
-                  ? 'Game over recorded. Saving your score now.'
-                  : submitState.message || cabinetStatusLabel}
+              <div className="flex flex-wrap gap-2">
+                <span className="score-pill">{game.controls}</span>
+                <span className="score-pill">{game.scoring}</span>
+                <span className="score-pill">{autoSaveLabel}</span>
               </div>
-            ) : (
-              <p className="mt-4 text-sm leading-6 text-gray-300">
-                Finish a run to update your score summary and your place on this game&apos;s leaderboard.
-              </p>
-            )}
-
-            {submitState.error ? (
-              <p className="status-error mt-4">
-                {submitState.error}
-              </p>
-            ) : null}
+            </div>
           </GlassPanel>
 
-          <GlassPanel className="p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="section-label">Controls</p>
-                <h3 className="mt-2 text-xl font-semibold text-white">Play, pause, and retry</h3>
+          <GlassPanel className="p-3 sm:p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                <span className="score-pill">Score {formatScore(liveScore)}</span>
+                <span className="score-pill">Best {formatScore(displayBest)}</span>
+                {lastResult ? <span className="score-pill">Last {formatScore(lastResult.score)}</span> : null}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={handlePlayAgain}
+                  size="sm"
+                >
+                  Play Again
+                </Button>
+                {!lastResult ? (
+                  <Button
+                    onClick={handlePauseToggle}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    {isPaused ? 'Resume' : 'Pause'}
+                  </Button>
+                ) : null}
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3">
-              <Card className="p-4">
-                <p className="text-xs uppercase tracking-[0.22em] text-gray-500">Keyboard hints</p>
-                <p className="mt-3 text-sm leading-6 text-gray-300">{game.controls}</p>
-                <p className="mt-2 text-sm leading-6 text-gray-300">Press Esc to pause the current run.</p>
-              </Card>
+            {lastResult || submitState.error ? (
+              <div className={`${statusToneClass} mt-3`}>
+                {submitState.loading
+                  ? 'Run complete. Saving your score now.'
+                  : submitState.error || submitState.message || cabinetStatusLabel}
+              </div>
+            ) : (
+              <p className="mt-3 text-sm leading-6 text-gray-300">{helperText}</p>
+            )}
+          </GlassPanel>
+
+          <GameCabinet
+            GameComponent={GameComponent}
+            controlsHint={game.controls}
+            gameId={game.id}
+            isPaused={isPaused}
+            lastResult={lastResult}
+            onGameOver={handleGameOver}
+            onPlayAgain={handlePlayAgain}
+            onScoreChange={handleScoreChange}
+            onTogglePause={handlePauseToggle}
+            pauseStateRef={pauseStateRef}
+            resetKey={resetKey}
+            startInstructions={game.instructions}
+            statusLabel={cabinetStatusLabel}
+            title={game.name}
+          />
+        </div>
+
+        <div className="space-y-4">
+          <GlassPanel className="p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="section-label">Run Notes</p>
+                <h3 className="mt-1 text-lg font-semibold text-white">Controls and saves</h3>
+              </div>
+              <span className="score-pill">{autoSaveLabel}</span>
             </div>
 
-            <div className="mt-5 flex flex-col gap-3">
-              <Button
-                className="w-full"
-                onClick={handlePlayAgain}
-              >
-                Play Again
-              </Button>
-              {!lastResult ? (
-                <Button
-                  className="w-full"
-                  onClick={handlePauseToggle}
-                  variant="secondary"
-                >
-                  {isPaused ? 'Resume Game' : 'Pause Game'}
-                </Button>
-              ) : null}
+            <div className="mt-4 space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-gray-500">Controls</p>
+                <p className="mt-2 text-sm leading-6 text-gray-300">{game.controls}</p>
+                <p className="mt-1 text-sm leading-6 text-gray-300">Press Esc to pause instantly.</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-gray-500">Scoring</p>
+                <p className="mt-2 text-sm leading-6 text-gray-300">{game.scoring}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
               {!user ? (
                 <Button
-                  className="w-full"
+                  size="sm"
                   to="/auth?mode=signin"
                   variant="secondary"
                 >
-                  Login To Save Scores
+                  Login To Save
                 </Button>
               ) : null}
               <Button
-                className="w-full"
+                size="sm"
                 to="/games"
                 variant="secondary"
               >
-                Browse Other Games
+                Browse Games
+              </Button>
+              <Button
+                size="sm"
+                to="/leaderboards"
+                variant="ghost"
+              >
+                View Boards
               </Button>
             </div>
 
-            {user ? (
-              <p className="mt-4 text-sm leading-6 text-gray-300">
-                Scores save automatically when the run ends. No extra submit step needed.
-              </p>
-            ) : null}
-            {!user ? (
-              <p className="mt-4 text-sm leading-6 text-gray-300">
-                Play as a guest any time, then log in when you want your scores saved to the leaderboard.
-              </p>
-            ) : null}
+            <p className="mt-4 text-sm leading-6 text-gray-300">
+              Finish a run to refresh this leaderboard and update your best saved score for {game.name}.
+            </p>
           </GlassPanel>
 
           <LeaderboardPanel

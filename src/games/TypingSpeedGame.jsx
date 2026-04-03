@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { playArcadeTone } from '../lib/sound';
 
 const WORD_BANKS = [
-  ['dash', 'glow', 'combo', 'laser', 'boost', 'pixel', 'neon', 'score'],
-  ['reactor', 'velocity', 'arcade', 'charger', 'flipper', 'orbital', 'streak'],
-  ['synchrony', 'afterimage', 'hypershift', 'starfield', 'luminance', 'waveform'],
-  ['cybernetic', 'overclocked', 'electroflux', 'transmission', 'interference'],
+  ['ace', 'beam', 'dash', 'flux', 'glow', 'grid', 'jump', 'laser', 'pixel', 'score', 'shift', 'spark', 'vault', 'wave'],
+  ['arcade', 'booster', 'charger', 'drifter', 'engine', 'horizon', 'matrix', 'orbital', 'reactor', 'runner', 'signal', 'vector', 'voltage', 'warping'],
+  ['backlight', 'checkpoint', 'hyperlane', 'luminous', 'overdrive', 'prototype', 'starfield', 'stratos', 'synthwave', 'telemetry', 'thruster', 'waveform', 'afterburn', 'jetstream'],
+  ['afterimage', 'cybernetic', 'electroflux', 'interference', 'navigation', 'overclocked', 'propulsion', 'safeguard', 'synchrony', 'trajectory', 'transmission', 'ultraviolet', 'nanocircuit', 'starbreaker'],
+  ['acceleration', 'interstellar', 'microprocessor', 'neurodynamic', 'photosynthetic', 'recalibration', 'reconstruction', 'spectrograph', 'transponder', 'hypervelocity', 'countermeasure', 'synchronization'],
 ];
 
 function getWordPool(level) {
@@ -18,7 +19,7 @@ function pickWord(level) {
 }
 
 export default function TypingSpeedGame({ onGameOver, onScoreChange, pauseStateRef }) {
-  const [timeLeft, setTimeLeft] = useState(45);
+  const [timeLeft, setTimeLeft] = useState(50);
   const [input, setInput] = useState('');
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
@@ -28,6 +29,7 @@ export default function TypingSpeedGame({ onGameOver, onScoreChange, pauseStateR
   const inputRef = useRef(null);
   const finishedRef = useRef(false);
   const charactersTypedRef = useRef(0);
+  const longestWordLengthRef = useRef(currentWord.length);
   const startedAtRef = useRef(Date.now());
 
   useEffect(() => {
@@ -52,6 +54,7 @@ export default function TypingSpeedGame({ onGameOver, onScoreChange, pauseStateR
                 durationMs: Date.now() - startedAtRef.current,
                 correctWords,
                 charactersTyped: charactersTypedRef.current,
+                longestWordLength: longestWordLengthRef.current,
               },
             });
             setMessage('Time up. Reset the run and beat your last chain.');
@@ -75,40 +78,43 @@ export default function TypingSpeedGame({ onGameOver, onScoreChange, pauseStateR
     }
 
     charactersTypedRef.current += input.length;
-    const baseDifficulty = Math.floor(correctWords / 4);
+    const difficulty = Math.floor(correctWords / 3);
 
     if (input.trim().toLowerCase() === currentWord.toLowerCase()) {
       const nextCorrectWords = correctWords + 1;
       const nextStreak = streak + 1;
-      const points = 20 + nextStreak * 5;
+      const points = 12 + currentWord.length * 4 + nextStreak * 3;
       const nextScore = score + points;
-      const upgradedDifficulty = Math.floor(nextCorrectWords / 4);
+      const upgradedDifficulty = Math.floor(nextCorrectWords / 3);
 
+      longestWordLengthRef.current = Math.max(longestWordLengthRef.current, currentWord.length);
       setCorrectWords(nextCorrectWords);
       setStreak(nextStreak);
       setScore(nextScore);
-      setMessage('Clean input. Keep the combo running.');
+      setMessage(`Clean entry. +${points} points.`);
       onScoreChange(nextScore);
       playArcadeTone('score');
       setCurrentWord(pickWord(upgradedDifficulty));
     } else {
       setStreak(0);
-      setMessage('Mistimed entry. Reset your rhythm.');
-      setCurrentWord(pickWord(baseDifficulty));
+      setMessage('Missed word. Reset your rhythm and try the next prompt.');
+      setCurrentWord(pickWord(difficulty));
     }
 
     setInput('');
+    queueMicrotask(() => inputRef.current?.focus());
   }
 
   return (
     <div className="flex h-full flex-col gap-5 p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="section-label">Typing Speed</p>
+          <p className="section-label">TypeSurge</p>
           <p className="mt-2 text-sm text-gray-300">{message}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className="score-pill">{timeLeft}s</span>
+          <span className="score-pill">Words {correctWords}</span>
           <span className="score-pill">Streak {streak}</span>
         </div>
       </div>
